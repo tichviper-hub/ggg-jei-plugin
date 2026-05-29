@@ -1,0 +1,1356 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GGG: ModuleWorks 配置编辑器</title>
+  <style>
+    :root {
+      --bg: #14181c;
+      --bg-soft: #1b2127;
+      --panel: #202830;
+      --panel-2: #252f38;
+      --line: #384552;
+      --line-2: #4a5b6b;
+      --text: #edf2f7;
+      --muted: #9fb0c1;
+      --accent: #69c08f;
+      --accent-2: #4ea5d9;
+      --warn: #e5b95c;
+      --danger: #df6d6d;
+      --ok: #7ed98c;
+      --chip: #2b3640;
+      --chip-on: #2f5441;
+      --chip-off: #523538;
+      --chip-muted: #3b4650;
+      --shadow: rgba(0, 0, 0, 0.28);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 1px solid var(--line-2);
+      background: var(--panel-2);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      filter: brightness(1.06);
+    }
+
+    button.primary {
+      background: #2f5441;
+      border-color: #42745a;
+    }
+
+    button.accent {
+      background: #27465a;
+      border-color: #3d6680;
+    }
+
+    button.warn {
+      background: #55462a;
+      border-color: #7a6437;
+    }
+
+    button:disabled,
+    input:disabled,
+    select:disabled,
+    textarea:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    input[type="text"],
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #11161b;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    textarea {
+      min-height: 260px;
+      resize: vertical;
+      line-height: 1.45;
+      font-family: "Cascadia Code", "Consolas", monospace;
+      font-size: 12px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: end;
+      padding: 16px 18px 10px;
+      border-bottom: 1px solid var(--line);
+      background: #181e24;
+      box-shadow: 0 10px 30px var(--shadow);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .subline {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .status {
+      min-height: 18px;
+      text-align: right;
+      color: var(--muted);
+      font-size: 13px;
+      max-width: 40vw;
+    }
+
+    .status.ok {
+      color: var(--ok);
+    }
+
+    .status.warn {
+      color: var(--warn);
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 300px minmax(720px, 1fr) 380px;
+      gap: 12px;
+      padding: 12px;
+      min-height: calc(100vh - 72px);
+    }
+
+    .left-col,
+    .main-col,
+    .right-col {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      gap: 12px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      overflow: hidden;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      background: #1a2128;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .panel-body {
+      padding: 12px;
+    }
+
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .row > * {
+      flex: 1;
+    }
+
+    .compact {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 26px;
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+      background: var(--chip);
+      color: var(--text);
+      font-size: 12px;
+      white-space: nowrap;
+      border-radius: 999px;
+    }
+
+    .chip.good {
+      background: var(--chip-on);
+      border-color: #42745a;
+      color: #d6f0df;
+    }
+
+    .chip.bad {
+      background: var(--chip-off);
+      border-color: #8b484d;
+      color: #ffdede;
+    }
+
+    .chip.muted {
+      background: var(--chip-muted);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      background: var(--bg-soft);
+      padding: 8px 10px;
+      border-radius: 8px;
+    }
+
+    .stat .label {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .stat .value {
+      font-size: 20px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      min-height: 0;
+      flex: 1;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 13px;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #1a2128;
+      border-bottom: 1px solid var(--line);
+      padding: 10px 8px;
+      text-align: left;
+      color: var(--muted);
+    }
+
+    tbody td {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding: 8px;
+      vertical-align: middle;
+    }
+
+    tbody tr {
+      cursor: pointer;
+    }
+
+    tbody tr:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    tbody tr.selected {
+      background: rgba(78, 165, 217, 0.12);
+    }
+
+    tbody tr.changed {
+      box-shadow: inset 3px 0 0 #e5b95c;
+    }
+
+    .cell-center {
+      text-align: center;
+    }
+
+    .name-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .name-text {
+      min-width: 0;
+    }
+
+    .item-name,
+    .mono-line {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .item-meta {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .item-icon {
+      width: 20px;
+      height: 20px;
+      image-rendering: pixelated;
+      object-fit: contain;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      flex: 0 0 auto;
+    }
+
+    .state-pill {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-width: 28px;
+      min-height: 24px;
+      border-radius: 999px;
+      padding: 0 8px;
+      background: var(--chip-muted);
+      border: 1px solid var(--line);
+      font-size: 12px;
+    }
+
+    .empty {
+      color: var(--muted);
+      padding: 16px;
+      text-align: center;
+    }
+
+    .section-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .group {
+      border: 1px solid var(--line);
+      background: var(--bg-soft);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .group-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 88px minmax(0, 1fr);
+      gap: 8px;
+      align-items: start;
+      margin-bottom: 8px;
+    }
+
+    .kv .k {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .checkline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .codebox {
+      border: 1px solid var(--line);
+      background: #11161b;
+      border-radius: 8px;
+      padding: 8px;
+      font-family: "Cascadia Code", "Consolas", monospace;
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      max-height: 280px;
+      overflow: auto;
+    }
+
+    details summary {
+      cursor: pointer;
+      color: var(--accent-2);
+      margin-bottom: 8px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 1500px) {
+      .app {
+        grid-template-columns: 280px minmax(0, 1fr) 360px;
+      }
+    }
+
+    @media (max-width: 1200px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>GGG 配置编辑器</h1>
+      <div class="subline">读取 `/ggg explore` 导出的快照，编辑 5 个配置标记，然后导出给 `/ggg reload` 使用。</div>
+    </div>
+    <div id="status" class="status">等待导入快照 JSON</div>
+  </header>
+
+  <div class="app">
+    <div class="left-col">
+      <section class="panel">
+        <div class="panel-header">导入与导出</div>
+        <div class="panel-body stack">
+          <div class="stack">
+            <label class="compact" for="snapshotFile">快照 JSON</label>
+            <input id="snapshotFile" type="file" accept=".json,application/json">
+          </div>
+          <div class="toolbar">
+            <button id="downloadBundleButton" class="primary" disabled>导出配置 JSON</button>
+            <button id="downloadPreviewButton" class="accent" disabled>导出当前预览</button>
+          </div>
+          <div class="toolbar">
+            <button id="resetButton" class="warn" disabled>恢复为导入状态</button>
+            <button id="clearDraftButton" disabled>清空本地草稿</button>
+          </div>
+          <div class="small">导出文件名会保持为 `ggg_moduleworks_snapshot_时间戳.json`，可直接用于 `/ggg reload 文件名.json`。</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">统计</div>
+        <div class="panel-body stack">
+          <div class="stats-grid">
+            <div class="stat"><div class="label">总物品</div><div id="statTotal" class="value">0</div></div>
+            <div class="stat"><div class="label">筛选结果</div><div id="statFiltered" class="value">0</div></div>
+            <div class="stat"><div class="label">已修改</div><div id="statChanged" class="value">0</div></div>
+            <div class="stat"><div class="label">进产双开</div><div id="statBoth" class="value">0</div></div>
+          </div>
+          <div id="countChips" class="chips"></div>
+          <div id="sourceMeta" class="small">当前未加载快照</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">筛选</div>
+        <div class="panel-body stack">
+          <div class="stack">
+            <label class="compact" for="searchInput">搜索</label>
+            <input id="searchInput" type="text" placeholder="名称、ID、方块形态 ID" disabled>
+          </div>
+          <div class="stack">
+            <label class="compact" for="namespaceSelect">模组命名空间</label>
+            <select id="namespaceSelect" disabled>
+              <option value="*">全部</option>
+            </select>
+          </div>
+          <div class="stack">
+            <label class="compact" for="sortSelect">排序</label>
+            <select id="sortSelect" disabled>
+              <option value="name">按名称</option>
+              <option value="id">按 ID</option>
+              <option value="namespace">按模组</option>
+              <option value="changed">已修改优先</option>
+            </select>
+          </div>
+          <label class="checkline"><input id="filterChanged" type="checkbox" disabled> 仅显示已修改</label>
+          <label class="checkline"><input id="filterUnconfigured" type="checkbox" disabled> 仅显示未配置</label>
+          <label class="checkline"><input id="filterWorldForm" type="checkbox" disabled> 仅显示有世界形态</label>
+          <label class="checkline"><input id="filterBlockForm" type="checkbox" disabled> 仅显示有方块形态</label>
+        </div>
+      </section>
+    </div>
+
+    <div class="main-col">
+      <section class="panel" style="flex: 1;">
+        <div class="panel-header">
+          <span>物品列表</span>
+          <span id="tableMeta" class="small">未加载数据</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 18%;">名称</th>
+                <th style="width: 28%;">物品 / 方块形态</th>
+                <th style="width: 16%;">形态</th>
+                <th style="width: 7%;">方块数</th>
+                <th style="width: 6%;">进</th>
+                <th style="width: 6%;">产</th>
+                <th style="width: 7%;">双</th>
+                <th style="width: 6%;">缓</th>
+                <th style="width: 6%;">材</th>
+                <th style="width: 6%;">弱</th>
+                <th style="width: 6%;">强</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr><td colspan="11" class="empty">先导入快照 JSON</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <div class="right-col">
+      <section class="panel" style="flex: 1;">
+        <div class="panel-header">详情</div>
+        <div id="detailBody" class="panel-body">
+          <div class="empty">选择一行后显示详情</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">导出预览</div>
+        <div class="panel-body stack">
+          <textarea id="previewText" readonly disabled></textarea>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const CATEGORY_KEYS = ["space", "simulate", "slow", "material", "warmupCleanup", "strongCleanup"];
+    const CATEGORY_TEXT = {
+      space: "可带入空间",
+      simulate: "可模拟产物",
+      slow: "参与减速",
+      material: "材料黑名单",
+      warmupCleanup: "暖机清理",
+      strongCleanup: "强清理"
+    };
+
+    const state = {
+      items: [],
+      filteredItems: [],
+      selectedItemId: null,
+      namespaces: ["*"],
+      namespace: "*",
+      search: "",
+      sort: "name",
+      filters: {
+        changed: false,
+        unconfigured: false,
+        worldForm: false,
+        blockForm: false
+      },
+      snapshotName: "",
+      snapshotMeta: null,
+      draftKey: ""
+    };
+
+    const els = {};
+
+    document.addEventListener("DOMContentLoaded", () => {
+      for (const id of [
+        "status",
+        "snapshotFile",
+        "downloadBundleButton",
+        "downloadPreviewButton",
+        "resetButton",
+        "clearDraftButton",
+        "statTotal",
+        "statFiltered",
+        "statChanged",
+        "statBoth",
+        "countChips",
+        "sourceMeta",
+        "searchInput",
+        "namespaceSelect",
+        "sortSelect",
+        "filterChanged",
+        "filterUnconfigured",
+        "filterWorldForm",
+        "filterBlockForm",
+        "tableMeta",
+        "tableBody",
+        "detailBody",
+        "previewText"
+      ]) {
+        els[id] = document.getElementById(id);
+      }
+
+      bindEvents();
+      syncControls();
+    });
+
+    function bindEvents() {
+      els.snapshotFile.addEventListener("change", onSnapshotSelected);
+      els.downloadBundleButton.addEventListener("click", downloadBundle);
+      els.downloadPreviewButton.addEventListener("click", downloadCurrentPreview);
+      els.resetButton.addEventListener("click", resetToBaseline);
+      els.clearDraftButton.addEventListener("click", clearDraft);
+      els.searchInput.addEventListener("input", () => {
+        state.search = els.searchInput.value.trim().toLowerCase();
+        renderAll();
+      });
+      els.namespaceSelect.addEventListener("change", () => {
+        state.namespace = els.namespaceSelect.value;
+        renderAll();
+      });
+      els.sortSelect.addEventListener("change", () => {
+        state.sort = els.sortSelect.value;
+        renderAll();
+      });
+      els.filterChanged.addEventListener("change", () => {
+        state.filters.changed = els.filterChanged.checked;
+        renderAll();
+      });
+      els.filterUnconfigured.addEventListener("change", () => {
+        state.filters.unconfigured = els.filterUnconfigured.checked;
+        renderAll();
+      });
+      els.filterWorldForm.addEventListener("change", () => {
+        state.filters.worldForm = els.filterWorldForm.checked;
+        renderAll();
+      });
+      els.filterBlockForm.addEventListener("change", () => {
+        state.filters.blockForm = els.filterBlockForm.checked;
+        renderAll();
+      });
+      els.tableBody.addEventListener("click", onTableClick);
+      els.tableBody.addEventListener("change", onTableChange);
+    }
+
+    async function onSnapshotSelected(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) {
+        return;
+      }
+
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (!isSnapshotJson(data)) {
+          setStatus("无法识别这个 JSON。请导入 /ggg explore 导出的快照文件。", "error");
+          return;
+        }
+        loadSnapshot(data, file.name);
+      } catch (error) {
+        setStatus("读取 JSON 失败: " + error.message, "error");
+      }
+    }
+
+    function isSnapshotJson(data) {
+      return !!data
+        && data.format === "ggg_moduleworks_snapshot"
+        && Array.isArray(data.items)
+        && typeof data.item_count === "number";
+    }
+
+    function loadSnapshot(data, fileName) {
+      state.snapshotName = fileName;
+      state.snapshotMeta = {
+        exportVersion: data.format_version || 0,
+        generatedAt: data.generated_at || "",
+        itemCount: data.item_count || 0,
+        namespaceCount: data.namespace_count || 0
+      };
+      state.items = (data.items || []).map(normalizeItem);
+      state.namespaces = ["*"].concat([...new Set(state.items.map((item) => item.namespace))].sort((a, b) => a.localeCompare(b, "zh-CN")));
+      state.selectedItemId = state.items[0] ? state.items[0].itemId : null;
+      state.search = "";
+      state.namespace = "*";
+      state.sort = "name";
+      state.filters.changed = false;
+      state.filters.unconfigured = false;
+      state.filters.worldForm = false;
+      state.filters.blockForm = false;
+      state.draftKey = buildDraftKey();
+      restoreDraft();
+      renderAll();
+      setStatus("已导入快照: " + fileName, "ok");
+    }
+
+    function normalizeItem(raw) {
+      const config = raw.config || {};
+      const blockFormIds = Array.isArray(raw.block_form_ids)
+        ? raw.block_form_ids.filter((id) => typeof id === "string" && id)
+        : [];
+      const current = {
+        space: !!config.can_use_in_space,
+        simulate: !!config.can_simulate,
+        slow: !!config.slow_tick && blockFormIds.length > 0,
+        material: !!config.material_blacklist,
+        warmupCleanup: (!!config.warmup_cleanup_whitelist || !!config.weak_cleanup_whitelist) && blockFormIds.length > 0,
+        strongCleanup: (!!config.strong_cleanup_whitelist || !!config.clear_inventory_whitelist) && blockFormIds.length > 0
+      };
+
+      return {
+        itemId: raw.item_id || "",
+        displayName: raw.display_name || raw.item_id || "",
+        namespace: raw.namespace || namespaceOf(raw.item_id || ""),
+        path: raw.path || pathOf(raw.item_id || ""),
+        translationKey: raw.translation_key || "",
+        hasWorldForm: !!raw.has_world_form,
+        worldFormType: raw.world_form_type || "none",
+        hasBlockForm: !!raw.has_block_form,
+        blockFormCountTotal: typeof raw.block_form_count_total === "number" ? raw.block_form_count_total : blockFormIds.length,
+        blockFormIds,
+        blockId: blockFormIds.length ? blockFormIds[0] : null,
+        iconDataUrl: raw.icon_data_url || "",
+        explicitConfig: {
+          can_use_in_space: !!config.can_use_in_space,
+          can_simulate: !!config.can_simulate,
+          slow_tick: !!config.slow_tick,
+          material_blacklist: !!config.material_blacklist,
+          warmup_cleanup_whitelist: !!config.warmup_cleanup_whitelist || !!config.weak_cleanup_whitelist,
+          strong_cleanup_whitelist: !!config.strong_cleanup_whitelist || !!config.clear_inventory_whitelist,
+          unconfigured: !!config.unconfigured
+        },
+        matchedRules: {},
+        baseline: { ...current },
+        current
+      };
+    }
+
+    function buildDraftKey() {
+      if (!state.snapshotMeta) {
+        return "";
+      }
+      return "gggCompactConfigDraft:" + [
+        state.snapshotMeta.exportVersion,
+        state.snapshotMeta.generatedAt,
+        state.snapshotMeta.itemCount
+      ].join("|");
+    }
+
+    function restoreDraft() {
+      if (!state.draftKey) {
+        return;
+      }
+      const raw = localStorage.getItem(state.draftKey);
+      if (!raw) {
+        return;
+      }
+      try {
+        const data = JSON.parse(raw);
+        applyBundleData(data);
+        setStatus("已恢复本地草稿。", "warn");
+      } catch (_error) {
+        localStorage.removeItem(state.draftKey);
+      }
+    }
+
+    function clearDraft() {
+      if (!state.draftKey) {
+        return;
+      }
+      localStorage.removeItem(state.draftKey);
+      setStatus("已清空本地草稿。", "ok");
+    }
+
+    function resetToBaseline() {
+      for (const item of state.items) {
+        item.current = { ...item.baseline };
+      }
+      saveDraft();
+      renderAll();
+      setStatus("已恢复到导入时状态。", "ok");
+    }
+
+    function applyBundleData(data) {
+      const importedItems = new Map((data.items || []).map((item) => [item.item_id, item]));
+      for (const item of state.items) {
+        const imported = importedItems.get(item.itemId);
+        const config = imported && imported.config ? imported.config : null;
+        if (!config) {
+          continue;
+        }
+        item.current.space = !!config.can_use_in_space;
+        item.current.simulate = !!config.can_simulate;
+        item.current.slow = !!config.slow_tick && item.hasBlockForm;
+        item.current.material = !!config.material_blacklist;
+        item.current.warmupCleanup = (!!config.warmup_cleanup_whitelist || !!config.weak_cleanup_whitelist) && item.hasBlockForm;
+        item.current.strongCleanup = (!!config.strong_cleanup_whitelist || !!config.clear_inventory_whitelist) && item.hasBlockForm;
+      }
+    }
+
+    function syncControls() {
+      const hasData = state.items.length > 0;
+      els.searchInput.disabled = !hasData;
+      els.namespaceSelect.disabled = !hasData;
+      els.sortSelect.disabled = !hasData;
+      els.filterChanged.disabled = !hasData;
+      els.filterUnconfigured.disabled = !hasData;
+      els.filterWorldForm.disabled = !hasData;
+      els.filterBlockForm.disabled = !hasData;
+      els.downloadBundleButton.disabled = !hasData;
+      els.downloadPreviewButton.disabled = !hasData;
+      els.resetButton.disabled = !hasData;
+      els.clearDraftButton.disabled = !hasData;
+      els.previewText.disabled = !hasData;
+
+      els.searchInput.value = state.search;
+      els.sortSelect.value = state.sort;
+      els.filterChanged.checked = state.filters.changed;
+      els.filterUnconfigured.checked = state.filters.unconfigured;
+      els.filterWorldForm.checked = state.filters.worldForm;
+      els.filterBlockForm.checked = state.filters.blockForm;
+
+      const options = state.namespaces.map((namespace) => {
+        const selected = namespace === state.namespace ? " selected" : "";
+        const label = namespace === "*" ? "全部" : namespace;
+        return "<option value=\"" + escapeAttr(namespace) + "\"" + selected + ">" + escapeHtml(label) + "</option>";
+      });
+      els.namespaceSelect.innerHTML = options.join("");
+    }
+
+    function renderAll() {
+      syncControls();
+      state.filteredItems = getFilteredItems();
+      ensureSelection();
+      renderSummary();
+      renderTable();
+      renderDetails();
+      renderPreview();
+    }
+
+    function getFilteredItems() {
+      const items = state.items.filter((item) => {
+        if (state.namespace !== "*" && item.namespace !== state.namespace) {
+          return false;
+        }
+        if (state.search) {
+          const haystack = [
+            item.displayName,
+            item.itemId,
+            item.blockId || "",
+            item.blockFormIds.join("\n")
+          ].join("\n").toLowerCase();
+          if (!haystack.includes(state.search)) {
+            return false;
+          }
+        }
+        if (state.filters.changed && !isChanged(item)) {
+          return false;
+        }
+        if (state.filters.unconfigured && !item.explicitConfig.unconfigured) {
+          return false;
+        }
+        if (state.filters.worldForm && !item.hasWorldForm) {
+          return false;
+        }
+        if (state.filters.blockForm && !item.hasBlockForm) {
+          return false;
+        }
+        return true;
+      });
+
+      const sorted = [...items];
+      sorted.sort((a, b) => compareItems(a, b, state.sort));
+      return sorted;
+    }
+
+    function compareItems(a, b, mode) {
+      if (mode === "changed") {
+        const diff = Number(isChanged(b)) - Number(isChanged(a));
+        if (diff !== 0) {
+          return diff;
+        }
+      }
+      if (mode === "namespace") {
+        const ns = a.namespace.localeCompare(b.namespace, "zh-CN");
+        if (ns !== 0) {
+          return ns;
+        }
+      }
+      if (mode === "id") {
+        return a.itemId.localeCompare(b.itemId, "zh-CN");
+      }
+      const name = a.displayName.localeCompare(b.displayName, "zh-CN");
+      if (name !== 0) {
+        return name;
+      }
+      return a.itemId.localeCompare(b.itemId, "zh-CN");
+    }
+
+    function ensureSelection() {
+      if (!state.filteredItems.length) {
+        state.selectedItemId = null;
+        return;
+      }
+      if (!state.selectedItemId || !state.filteredItems.some((item) => item.itemId === state.selectedItemId)) {
+        state.selectedItemId = state.filteredItems[0].itemId;
+      }
+    }
+
+    function renderSummary() {
+      const counts = {
+        space: state.items.filter((item) => item.current.space).length,
+        simulate: state.items.filter((item) => item.current.simulate).length,
+        slow: state.items.filter((item) => item.current.slow).length,
+        material: state.items.filter((item) => item.current.material).length,
+        warmupCleanup: state.items.filter((item) => item.current.warmupCleanup).length,
+        strongCleanup: state.items.filter((item) => item.current.strongCleanup).length,
+        both: state.items.filter((item) => item.current.space && item.current.simulate).length
+      };
+
+      els.statTotal.textContent = String(state.items.length);
+      els.statFiltered.textContent = String(state.filteredItems.length);
+      els.statChanged.textContent = String(state.items.filter(isChanged).length);
+      els.statBoth.textContent = String(counts.both);
+      els.tableMeta.textContent = state.items.length
+        ? "快照版本 " + state.snapshotMeta.exportVersion + " | " + state.snapshotName
+        : "未加载数据";
+      els.sourceMeta.textContent = state.items.length
+        ? [
+            "快照: " + state.snapshotName,
+            "生成时间: " + (state.snapshotMeta.generatedAt || "-"),
+            "物品数: " + state.snapshotMeta.itemCount,
+            "模组数: " + state.snapshotMeta.namespaceCount
+          ].join(" | ")
+        : "当前未加载快照";
+
+      const chips = [
+        makeCountChip("进", counts.space, "good"),
+        makeCountChip("产", counts.simulate, "good"),
+        makeCountChip("缓", counts.slow, "muted"),
+        makeCountChip("材", counts.material, "muted"),
+        makeCountChip("暖", counts.warmupCleanup, "muted"),
+        makeCountChip("强", counts.strongCleanup, "muted")
+      ];
+      els.countChips.innerHTML = chips.join("");
+    }
+
+    function makeCountChip(label, count, tone) {
+      return "<span class=\"chip " + tone + "\">" + escapeHtml(label) + " " + count + "</span>";
+    }
+
+    function renderTable() {
+      if (!state.items.length) {
+        els.tableBody.innerHTML = "<tr><td colspan=\"11\" class=\"empty\">先导入快照 JSON</td></tr>";
+        return;
+      }
+      if (!state.filteredItems.length) {
+        els.tableBody.innerHTML = "<tr><td colspan=\"11\" class=\"empty\">当前筛选没有结果</td></tr>";
+        return;
+      }
+
+      const rows = state.filteredItems.map((item) => {
+        const rowClasses = [];
+        if (item.itemId === state.selectedItemId) {
+          rowClasses.push("selected");
+        }
+        if (isChanged(item)) {
+          rowClasses.push("changed");
+        }
+
+        return [
+          "<tr data-item-id=\"", escapeAttr(item.itemId), "\" class=\"", rowClasses.join(" "), "\">",
+          "<td><div class=\"name-cell\">",
+          "<img class=\"item-icon\" src=\"", escapeAttr(item.iconDataUrl || ""), "\" alt=\"\">",
+          "<div class=\"name-text\">",
+          "<div class=\"item-name\">", escapeHtml(item.displayName), "</div>",
+          "<div class=\"item-meta\">", escapeHtml(item.namespace), "</div>",
+          "</div></div></td>",
+          "<td><div class=\"name-cell\"><div class=\"name-text\">",
+          "<div class=\"mono-line\">", escapeHtml(item.itemId), "</div>",
+          item.blockFormIds.length
+            ? "<div class=\"item-meta\">" + escapeHtml(item.blockFormIds.join(", ")) + "</div>"
+            : "<div class=\"item-meta\">-</div>",
+          "</div></div></td>",
+          "<td>", renderFormCell(item), "</td>",
+          "<td class=\"cell-center\">", item.hasBlockForm ? String(item.blockFormCountTotal) : "-", "</td>",
+          "<td class=\"cell-center\">", renderCheckCell(item, "space", true), "</td>",
+          "<td class=\"cell-center\">", renderCheckCell(item, "simulate", true), "</td>",
+          "<td class=\"cell-center\">", renderBothCell(item), "</td>",
+          "<td class=\"cell-center\">", renderCheckCell(item, "slow", item.hasBlockForm), "</td>",
+          "<td class=\"cell-center\">", renderCheckCell(item, "material", true), "</td>",
+          "<td class=\"cell-center\">", renderCheckCell(item, "warmupCleanup", item.hasBlockForm), "</td>",
+          "<td class=\"cell-center\">", renderCheckCell(item, "strongCleanup", item.hasBlockForm), "</td>",
+          "</tr>"
+        ].join("");
+      });
+
+      els.tableBody.innerHTML = rows.join("");
+    }
+
+    function renderFormCell(item) {
+      const chips = [];
+      if (item.hasBlockForm) {
+        chips.push("<span class=\"chip muted\">方块 x" + item.blockFormCountTotal + "</span>");
+      } else if (item.hasWorldForm) {
+        chips.push("<span class=\"chip muted\">" + escapeHtml(worldFormLabel(item.worldFormType)) + "</span>");
+      } else {
+        chips.push("<span class=\"chip muted\">无世界形态</span>");
+      }
+      return "<div class=\"chips\">" + chips.join("") + "</div>";
+    }
+
+    function renderBothCell(item) {
+      const active = item.current.space && item.current.simulate;
+      return "<span class=\"state-pill " + (active ? "chip good" : "") + "\">" + (active ? "是" : "-") + "</span>";
+    }
+
+    function renderCheckCell(item, category, available) {
+      if (!available) {
+        return "<span class=\"state-pill\">-</span>";
+      }
+      const checked = item.current[category] ? " checked" : "";
+      return "<input type=\"checkbox\" data-item-id=\"" + escapeAttr(item.itemId) + "\" data-cat=\"" + escapeAttr(category) + "\"" + checked + ">";
+    }
+
+    function renderDetails() {
+      const item = getSelectedItem();
+      if (!item) {
+        els.detailBody.innerHTML = "<div class=\"empty\">选择一行后显示详情</div>";
+        return;
+      }
+
+      const ruleBlocks = [
+        detailRuleGroup("导入时配置", item.explicitConfig),
+        detailRuleGroup("当前导出配置", exportItemConfig(item))
+      ].join("");
+
+      els.detailBody.innerHTML = [
+        "<div class=\"section-list\">",
+          "<div class=\"group\">",
+            "<div class=\"group-title\">当前条目</div>",
+            "<div class=\"kv\"><div class=\"k\">图标</div><div><img class=\"item-icon\" src=\"" + escapeAttr(item.iconDataUrl || "") + "\" alt=\"\"></div></div>",
+            "<div class=\"kv\"><div class=\"k\">名称</div><div>" + escapeHtml(item.displayName) + "</div></div>",
+            "<div class=\"kv\"><div class=\"k\">物品 ID</div><div class=\"mono-line\">" + escapeHtml(item.itemId) + "</div></div>",
+            "<div class=\"kv\"><div class=\"k\">翻译键</div><div class=\"mono-line\">" + escapeHtml(item.translationKey || "-") + "</div></div>",
+            "<div class=\"kv\"><div class=\"k\">世界形态</div><div>" + escapeHtml(worldFormLabel(item.worldFormType)) + "</div></div>",
+            item.blockFormIds.length ? "<div class=\"kv\"><div class=\"k\">方块形态</div><div class=\"mono-line\">" + escapeHtml(item.blockFormIds.join("\n")) + "</div></div>" : "",
+          "</div>",
+          "<div class=\"group\">",
+            "<div class=\"group-title\">编辑状态</div>",
+            detailCheckbox(item, "space", true),
+            detailCheckbox(item, "simulate", true),
+            detailCheckbox(item, "slow", item.hasBlockForm),
+            detailCheckbox(item, "material", true),
+            detailCheckbox(item, "warmupCleanup", item.hasBlockForm),
+            detailCheckbox(item, "strongCleanup", item.hasBlockForm),
+            "<div class=\"chips\">",
+              "<span class=\"chip " + (isChanged(item) ? "bad" : "muted") + "\">" + (isChanged(item) ? "已修改" : "未修改") + "</span>",
+              "<span class=\"chip " + (item.current.space && item.current.simulate ? "good" : "muted") + "\">" + (item.current.space && item.current.simulate ? "进产双开" : "非双开") + "</span>",
+            "</div>",
+          "</div>",
+          ruleBlocks,
+        "</div>"
+      ].join("");
+
+      bindDetailInputs();
+    }
+
+    function detailCheckbox(item, category, available) {
+      const id = "detail-" + category;
+      const disabled = available ? "" : " disabled";
+      const checked = available && item.current[category] ? " checked" : "";
+      const suffix = category === "slow" || category === "warmupCleanup" || category === "strongCleanup" ? "（需要方块形态）" : "";
+      return "<label class=\"checkline\"><input id=\"" + id + "\" type=\"checkbox\" data-detail-cat=\"" + category + "\"" + checked + disabled + "> " + escapeHtml(CATEGORY_TEXT[category]) + " " + escapeHtml(suffix) + "</label>";
+    }
+
+    function bindDetailInputs() {
+      const item = getSelectedItem();
+      if (!item) {
+        return;
+      }
+      const inputs = els.detailBody.querySelectorAll("input[data-detail-cat]");
+      inputs.forEach((input) => {
+        input.addEventListener("change", (event) => {
+          const category = event.target.dataset.detailCat;
+          if (!category) {
+            return;
+          }
+          setCategory(item, category, event.target.checked);
+        });
+      });
+    }
+
+    function detailRuleGroup(title, data) {
+      return [
+        "<div class=\"group\">",
+        "<div class=\"group-title\">", escapeHtml(title), "</div>",
+        "<div class=\"codebox\">", escapeHtml(prettyJson(data || {})), "</div>",
+        "</div>"
+      ].join("");
+    }
+
+    function onTableClick(event) {
+      const row = event.target.closest("tr[data-item-id]");
+      if (!row) {
+        return;
+      }
+      state.selectedItemId = row.dataset.itemId;
+      renderAll();
+    }
+
+    function onTableChange(event) {
+      const input = event.target;
+      if (!input.matches("input[data-item-id][data-cat]")) {
+        return;
+      }
+      const item = findItem(input.dataset.itemId);
+      if (!item) {
+        return;
+      }
+      setCategory(item, input.dataset.cat, input.checked);
+    }
+
+    function setCategory(item, category, value) {
+      if ((category === "slow" || category === "warmupCleanup" || category === "strongCleanup") && !item.hasBlockForm) {
+        return;
+      }
+      item.current[category] = !!value;
+      saveDraft();
+      renderAll();
+    }
+
+    function saveDraft() {
+      if (!state.draftKey) {
+        return;
+      }
+      try {
+        localStorage.setItem(state.draftKey, JSON.stringify(buildBundleObject()));
+      } catch (_error) {
+        setStatus("本地草稿保存失败，可能是浏览器存储空间不足。", "warn");
+      }
+    }
+
+    function buildOutputs() {
+      const items = state.items.map((item) => ({
+        item_id: item.itemId,
+        display_name: item.displayName,
+        namespace: item.namespace,
+        path: item.path,
+        translation_key: item.translationKey,
+        has_world_form: item.hasWorldForm,
+        world_form_type: item.worldFormType,
+        has_block_form: item.hasBlockForm,
+        block_form_count_total: item.blockFormCountTotal,
+        block_form_ids: item.blockFormIds,
+        icon_data_url: item.iconDataUrl,
+        config: exportItemConfig(item)
+      }));
+      items.sort((a, b) => a.item_id.localeCompare(b.item_id, "zh-CN"));
+      return { items };
+    }
+
+    function exportItemConfig(item) {
+      return {
+        can_use_in_space: !!item.current.space,
+        can_simulate: !!item.current.simulate,
+        slow_tick: !!item.current.slow && item.hasBlockForm,
+        material_blacklist: !!item.current.material,
+        warmup_cleanup_whitelist: !!item.current.warmupCleanup && item.hasBlockForm,
+        strong_cleanup_whitelist: !!item.current.strongCleanup && item.hasBlockForm,
+        unconfigured: !item.current.space && !item.current.simulate && !item.current.slow && !item.current.material && !item.current.warmupCleanup && !item.current.strongCleanup
+      };
+    }
+
+    function buildBundleObject() {
+      const outputs = buildOutputs();
+      return {
+        format: "ggg_moduleworks_snapshot",
+        format_version: 2,
+        generated_at: new Date().toISOString(),
+        item_count: state.items.length,
+        namespace_count: state.namespaces.length > 0 ? state.namespaces.length - 1 : 0,
+        items: outputs.items
+      };
+    }
+
+    function renderPreview() {
+      if (!state.items.length) {
+        els.previewText.value = "";
+        return;
+      }
+      els.previewText.value = prettyJson(buildBundleObject());
+    }
+
+    function downloadBundle() {
+      if (!state.items.length) {
+        return;
+      }
+      downloadText(timestampedBundleFilename(), prettyJson(buildBundleObject()));
+      setStatus("已下载配置 JSON。", "ok");
+    }
+
+    function downloadCurrentPreview() {
+      if (!state.items.length) {
+        return;
+      }
+      downloadText(timestampedBundleFilename(), els.previewText.value);
+      setStatus("已下载当前预览。", "ok");
+    }
+
+    function downloadText(filename, text) {
+      const blob = new Blob([text], { type: "application/json;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+    }
+
+    function getSelectedItem() {
+      return state.selectedItemId ? findItem(state.selectedItemId) : null;
+    }
+
+    function findItem(itemId) {
+      return state.items.find((item) => item.itemId === itemId) || null;
+    }
+
+    function isChanged(item) {
+      return CATEGORY_KEYS.some((key) => !!item.current[key] !== !!item.baseline[key]);
+    }
+
+    function worldFormLabel(type) {
+      const map = {
+        block: "方块",
+        standing_and_wall_block: "方块",
+        hanging_entity: "悬挂实体",
+        minecart: "矿车",
+        boat: "船",
+        end_crystal: "末地水晶",
+        spawn_egg: "刷怪蛋",
+        water_bucket: "水桶",
+        lava_bucket: "熔岩桶",
+        powder_snow_bucket: "细雪桶",
+        redstone_wire: "红石线",
+        tripwire: "绊线",
+        armor_stand: "盔甲架",
+        item_frame: "物品展示框",
+        glow_item_frame: "发光物品展示框",
+        painting: "画",
+        none: "无"
+      };
+      return map[type] || type || "无";
+    }
+
+    function prettyJson(value) {
+      return JSON.stringify(value, null, 2);
+    }
+
+    function namespaceOf(id) {
+      const parts = String(id).split(":");
+      return parts.length > 1 ? parts[0] : "";
+    }
+
+    function pathOf(id) {
+      const parts = String(id).split(":");
+      return parts.length > 1 ? parts[1] : parts[0];
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function escapeAttr(text) {
+      return escapeHtml(text);
+    }
+
+    function setStatus(text, tone) {
+      els.status.textContent = text;
+      els.status.className = "status" + (tone ? " " + tone : "");
+    }
+
+    function timestampForFilename() {
+      const date = new Date();
+      const pad = (value) => String(value).padStart(2, "0");
+      return [
+        date.getFullYear(),
+        pad(date.getMonth() + 1),
+        pad(date.getDate())
+      ].join("") + "_" + [
+        pad(date.getHours()),
+        pad(date.getMinutes()),
+        pad(date.getSeconds())
+      ].join("");
+    }
+
+    function timestampedBundleFilename() {
+      return "ggg_moduleworks_snapshot_" + timestampForFilename() + ".json";
+    }
+  </script>
+</body>
+</html>
